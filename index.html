@@ -1,4 +1,596 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <title>Warehouse Management System</title> <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- ICONS --> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>  <style>  /* ---------------- GLOBAL THEME ------------------- */  :root {     --bg-dark: #0f172a;     --bg-darker: #0b1324;     --sidebar-dark: #1e293b;     --accent: #14b8a6;     --accent-hover: #0d9488;     --text-light: #e2e8f0;     --text-muted: #94a3b8;     --card-dark: #1e293b;     --danger: #ef4444;     --success: #22c55e;     --warning: #f59e0b; }  * {     margin: 0;     padding: 0;     box-sizing: border-box;     font-family: "Segoe UI", sans-serif; }  /* ---------------- BODY ------------------- */ body {     background: var(--bg-dark);     color: var(--text-light); }  /* ---------------- LOGIN PAGE ------------------- */ #loginPage {     width: 100%;     height: 100vh;     display: flex;     align-items: center;     justify-content: center; }  .login-container {     width: 350px;     background: var(--sidebar-dark);     padding: 30px;     border-radius: 10px;     box-shadow: 0 0 25px rgba(0,0,0,0.5); }  .login-container h2 {     text-align: center;     margin-bottom: 20px; }  .login-container input {     width: 100%;     padding: 12px;     background: var(--bg-dark);     color: var(--text-light);     border: none;     margin-bottom: 15px;     border-radius: 6px; }  .login-container button {     width: 100%;     padding: 12px;     background: var(--accent);     border: none;     color: #fff;     border-radius: 6px;     cursor: pointer; }  .login-container button:hover {     background: var(--accent-hover); }  /* ---------------- DASHBOARD LAYOUT ------------------- */  #dashboardPage {     display: none;     height: 100vh;     overflow: hidden; }  .wrapper {     display: flex;     height: 100%; }  /* ---------------- SIDEBAR ------------------- */  .sidebar {     width: 250px;     background: var(--sidebar-dark);     padding-top: 20px;     transition: width 0.4s ease; }  .sidebar.collapsed {     width: 70px; }  .sidebar h3 {     text-align: center;     margin-bottom: 10px; }  .sidebar button {     display: flex;     align-items: center;     gap: 15px;     padding: 15px;     width: 100%;     background: none;     color: var(--text-light);     border: none;     cursor: pointer;     font-size: 16px;     transition: 0.3s; }  .sidebar button:hover {     background: var(--bg-dark); }  .sidebar.collapsed button span {     display: none; }  /* ------------- TOPBAR -------------- */  .topbar {     height: 60px;     background: var(--bg-darker);     display: flex;     align-items: center;     justify-content: space-between;     padding: 0 20px; }  .topbar i {     cursor: pointer;     font-size: 20px; }  .user-info {     display: flex;     gap: 15px; }  /* ---------------- CONTENT AREA ------------------- */  .content {     flex: 1;     padding: 20px;     overflow-y: auto; }  .card {     background: var(--card-dark);     padding: 20px;     border-radius: 10px;     margin-bottom: 20px; }  /* ------------ TABLES ------------- */  table {     width: 100%;     border-collapse: collapse;     margin-top: 15px; }  th, td {     border-bottom: 1px solid var(--bg-dark);     padding: 12px; }  /* ------------ MULTI SELECT REQUEST UI ------------ */  .multi-select-row {     display: flex;     align-items: center;     gap: 15px;     margin-bottom: 8px; }  /* ------------ BUTTONS ------------ */  .btn {     padding: 10px 15px;     background: var(--accent);     border: none;     border-radius: 6px;     color: white;     cursor: pointer; }  .btn:hover {     background: var(--accent-hover); }  .btn-danger {     background: var(--danger); }  .btn-success {     background: var(--success); }  .btn-warning {     background: var(--warning); }  </style> </head> <body>  <!-- =========================================================                         LOGIN PAGE ========================================================== --> <div id="loginPage">     <div class="login-container">         <h2>Sign In</h2>         <input type="email" id="loginEmail" placeholder="Email">         <input type="password" id="loginPassword" placeholder="Password">         <button onclick="loginUser()">Login</button>     </div> </div>  <!-- =========================================================                         DASHBOARD ========================================================== --> <div id="dashboardPage">      <div class="wrapper">          <!-- SIDEBAR -->         <div class="sidebar" id="sidebar">             <button onclick="showDashboard()">                 <i class="fa fa-home"></i> <span>Dashboard</span>             </button>              <button id="btnAddProducts" onclick="showAddProductPage()">                 <i class="fa fa-box"></i> <span>Add Products</span>             </button>              <button id="btnRequestProduct" onclick="showRequestPage()">                 <i class="fa fa-cart-plus"></i> <span>Request Product</span>             </button>              <button id="btnRequests" onclick="showRequestList()">                 <i class="fa fa-list"></i> <span>Requests</span>             </button>              <button id="btnReports" onclick="showReports()">                 <i class="fa fa-chart-line"></i> <span>Reports</span>             </button>              <button id="btnUsers" onclick="showUsersPage()">                 <i class="fa fa-users"></i> <span>Users</span>             </button>         </div>          <!-- CONTENT AREA -->         <div style="flex:1;">             <div class="topbar">                 <i class="fa fa-bars" onclick="toggleSidebar()"></i>                 <div class="user-info">                     <span id="userDisplayName"></span> |                     <span id="userRoleName"></span>                 </div>             </div>              <div class="content">                  <!-- DASHBOARD OVERVIEW -->                 <div id="dashboardSection" class="card">                     <h2>Dashboard Overview</h2>                     <p>Welcome to your system interface.</p>                 </div>                  <!-- ADD PRODUCT PAGE -->                 <div id="addProductSection" class="card" style="display:none;">                     <h2>Add New Product</h2>                     <input id="prodName" placeholder="Product Name">                     <input id="prodStock" placeholder="Stock Quantity" type="number">                     <button class="btn" onclick="addProduct()">Save Product</button>                     <hr>                     <h3>Current Products</h3>                     <table id="productTable"></table>                 </div>                  <!-- MULTI SELECT PRODUCT REQUEST -->                 <div id="requestProductsSection" class="card" style="display:none;">                     <h2>Request Products</h2>                     <div id="multiProductContainer"></div>                     <button class="btn" onclick="submitMultipleRequest()">Submit Request</button>                 </div>                  <!-- REQUEST LIST -->                 <div id="requestListSection" class="card" style="display:none;">                     <h2>All Requests</h2>                     <table id="requestTable"></table>                 </div>                  <!-- REPORTS -->                 <div id="reportsSection" class="card" style="display:none;">                     <h2>Reports & Analytics</h2>                     <p>Charts and analytics will be added later.</p>                 </div>                  <!-- USERS PAGE -->                 <div id="usersSection" class="card" style="display:none;">                     <h2>Users</h2>                     <p>User account management will appear here.</p>                 </div>              </div>         </div>      </div> </div>  <!-- =========================================================                         JAVASCRIPT LOGIC ========================================================== --> <script>  /* ---------------- DATA STORES (Front-End Only) ---------------- */  let users = [     { email: "admin@example.com", password: "12345", role: "admin", name: "System Admin" },     { email: "warehouse@example.com", password: "12345", role: "warehouse", name: "Warehouse Manager" },     { email: "emp@example.com", password: "12345", role: "employee", name: "Employee 1" } ];  let currentUser = null; let products = []; let requests = [];  /* ---------------- LOGIN ---------------- */  function loginUser() {     const email = loginEmail.value.trim();     const password = loginPassword.value.trim();      const user = users.find(u => u.email === email && u.password === password);     if (!user) {         alert("Invalid login");         return;     }      currentUser = user;      loginPage.style.display = "none";     dashboardPage.style.display = "block";      userDisplayName.innerText = user.name;     userRoleName.innerText = user.role;      applyRoleRestrictions(); }  /* ---------------- SIDEBAR COLLAPSE ---------------- */  function toggleSidebar() {     let sb = document.getElementById("sidebar");     sb.classList.toggle("collapsed"); }  /* ---------------- PAGE SHOW/HIDE ---------------- */  function hideAllPages() {     dashboardSection.style.display = "none";     addProductSection.style.display = "none";     requestProductsSection.style.display = "none";     requestListSection.style.display = "none";     reportsSection.style.display = "none";     usersSection.style.display = "none"; }  function showDashboard() {     hideAllPages();     dashboardSection.style.display = "block"; }  function showAddProductPage() {     hideAllPages();     addProductSection.style.display = "block";     renderProductTable(); }  function showRequestPage() {     hideAllPages();     requestProductsSection.style.display = "block";     renderMultiProductSelection(); }  function showRequestList() {     hideAllPages();     requestListSection.style.display = "block";     renderRequestTable(); }  function showReports() {     hideAllPages();     reportsSection.style.display = "block"; }  function showUsersPage() {     hideAllPages();     usersSection.style.display = "block"; }  /* ---------------- ROLE PERMISSIONS ---------------- */  function applyRoleRestrictions() {     // Sidebar buttons     btnAddProducts.style.display = "block";     btnReports.style.display = "block";     btnUsers.style.display = "block";      addProductSection.style.display = "block";      if (currentUser.role === "employee") {         btnAddProducts.style.display = "none";         btnReports.style.display = "none";         btnUsers.style.display = "none";          addProductSection.style.display = "none";     }      if (currentUser.role === "warehouse") {         btnUsers.style.display = "none";     } }  /* ---------------- ADD PRODUCTS ---------------- */  function addProduct() {     let name = prodName.value.trim();     let stock = Number(prodStock.value);      if (!name || stock <= 0) {         alert("Invalid values");         return;     }      products.push({         id: Date.now(),         name,         stock     });      prodName.value = "";     prodStock.value = "";      renderProductTable(); }  function renderProductTable() {     let html = `         <tr>             <th>Name</th>             <th>Stock</th>         </tr>     `;      products.forEach(p => {         html += `             <tr>                 <td>${p.name}</td>                 <td>${p.stock}</td>             </tr>         `;     });      productTable.innerHTML = html; }  /* ---------------- MULTI PRODUCT REQUEST ---------------- */  function renderMultiProductSelection() {     multiProductContainer.innerHTML = "";      products.forEach(prod => {         const row = document.createElement("div");         row.className = "multi-select-row";          row.innerHTML = `             <input type="checkbox" class="multiProdCheck" data-id="${prod.id}">             <span>${prod.name} (Stock: ${prod.stock})</span>             <input type="number" min="1" max="${prod.stock}" value="1" class="multiProdQty" data-id="${prod.id}" style="width:60px;">         `;          multiProductContainer.appendChild(row);     }); }  function submitMultipleRequest() {     const selected = document.querySelectorAll(".multiProdCheck:checked");      if (selected.length === 0) {         alert("Choose at least one product");         return;     }      const items = [];      selected.forEach(chk => {         const id = chk.dataset.id;         const qty = document.querySelector(`.multiProdQty[data-id="${id}"]`).value;         const product = products.find(p => p.id == id);          items.push({             id,             name: product.name,             qty: Number(qty)         });     });      requests.push({         id: "REQ-" + Date.now(),         user: currentUser.name,         role: currentUser.role,         items,         status: "pending",         timestamp: new Date().toLocaleString()     });      alert("Request submitted successfully!");     showRequestList(); }  /* ---------------- REQUEST TABLE ---------------- */  function renderRequestTable() {     let html = `         <tr>             <th>ID</th>             <th>User</th>             <th>Items</th>             <th>Status</th>             <th>Action</th>         </tr>     `;      requests.forEach(r => {         let itemText = r.items.map(i => `${i.name} x${i.qty}`).join("<br>");          html += `             <tr>                 <td>${r.id}</td>                 <td>${r.user}</td>                 <td>${itemText}</td>                 <td>${r.status}</td>                 <td>                     ${currentUser.role !== "employee" ? `                         <button class="btn-success" onclick="approveReq('${r.id}')">Approve</button>                         <button class="btn-danger" onclick="rejectReq('${r.id}')">Reject</button>                     ` : "No Access"}                 </td>             </tr>         `;     });      requestTable.innerHTML = html; }  function approveReq(id) {     const req = requests.find(r => r.id === id);     req.status = "approved";     renderRequestTable(); }  function rejectReq(id) {     const req = requests.find(r => r.id === id);     req.status = "rejected";     renderRequestTable(); }  
-</script> 
-</body> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Warehouse Management System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ICONS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+
+/* ---------------- GLOBAL THEME ------------------- */
+
+:root {
+    --bg-dark: #0f172a;
+    --bg-darker: #0b1324;
+    --sidebar-dark: #1e293b;
+    --accent: #14b8a6;
+    --accent-hover: #0d9488;
+    --text-light: #e2e8f0;
+    --text-muted: #94a3b8;
+    --card-dark: #1e293b;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ---------------- BODY ------------------- */
+body {
+    background: var(--bg-dark);
+    color: var(--text-light);
+}
+
+/* ---------------- LOGIN PAGE ------------------- */
+#loginPage {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-container {
+    width: 350px;
+    background: var(--sidebar-dark);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+}
+
+.login-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    border: none;
+    margin-bottom: 15px;
+    border-radius: 6px;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.login-container button:hover {
+    background: var(--accent-hover);
+}
+
+/* ---------------- DASHBOARD LAYOUT ------------------- */
+
+#dashboardPage {
+    display: none;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.wrapper {
+    display: flex;
+    height: 100%;
+}
+
+/* ---------------- SIDEBAR ------------------- */
+
+.sidebar {
+    width: 250px;
+    background: var(--sidebar-dark);
+    padding-top: 20px;
+    transition: width 0.4s ease;
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar h3 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.sidebar button {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    width: 100%;
+    background: none;
+    color: var(--text-light);
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.sidebar button:hover {
+    background: var(--bg-dark);
+}
+
+.sidebar.collapsed button span {
+    display: none;
+}
+
+/* ------------- TOPBAR -------------- */
+
+.topbar {
+    height: 60px;
+    background: var(--bg-darker);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.topbar i {
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.user-info {
+    display: flex;
+    gap: 15px;
+}
+
+/* ---------------- CONTENT AREA ------------------- */
+
+.content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.card {
+    background: var(--card-dark);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+/* ------------ TABLES ------------- */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border-bottom: 1px solid var(--bg-dark);
+    padding: 12px;
+}
+
+/* ------------ MULTI SELECT REQUEST UI ------------ */
+
+.multi-select-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+/* ------------ BUTTONS ------------ */
+
+.btn {
+    padding: 10px 15px;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: var(--accent-hover);
+}
+
+.btn-danger {
+    background: var(--danger);
+}
+
+.btn-success {
+    background: var(--success);
+}
+
+.btn-warning {
+    background: var(--warning);
+}
+
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+                        LOGIN PAGE
+========================================================== -->
+<div id="loginPage">
+    <div class="login-container">
+        <h2>Sign In</h2>
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="loginUser()">Login</button>
+    </div>
+</div>
+
+<!-- =========================================================
+                        DASHBOARD
+========================================================== -->
+<div id="dashboardPage">
+
+    <div class="wrapper">
+
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <button onclick="showDashboard()">
+                <i class="fa fa-home"></i> <span>Dashboard</span>
+            </button>
+
+            <button id="btnAddProducts" onclick="showAddProductPage()">
+                <i class="fa fa-box"></i> <span>Add Products</span>
+            </button>
+
+            <button id="btnRequestProduct" onclick="showRequestPage()">
+                <i class="fa fa-cart-plus"></i> <span>Request Product</span>
+            </button>
+
+            <button id="btnRequests" onclick="showRequestList()">
+                <i class="fa fa-list"></i> <span>Requests</span>
+            </button>
+
+            <button id="btnReports" onclick="showReports()">
+                <i class="fa fa-chart-line"></i> <span>Reports</span>
+            </button>
+
+            <button id="btnUsers" onclick="showUsersPage()">
+                <i class="fa fa-users"></i> <span>Users</span>
+            </button>
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div style="flex:1;">
+            <div class="topbar">
+                <i class="fa fa-bars" onclick="toggleSidebar()"></i>
+                <div class="user-info">
+                    <span id="userDisplayName"></span> |
+                    <span id="userRoleName"></span>
+                </div>
+            </div>
+
+            <div class="content">
+
+                <!-- DASHBOARD OVERVIEW -->
+                <div id="dashboardSection" class="card">
+                    <h2>Dashboard Overview</h2>
+                    <p>Welcome to your system interface.</p>
+                </div>
+
+                <!-- ADD PRODUCT PAGE -->
+                <div id="addProductSection" class="card" style="display:none;">
+                    <h2>Add New Product</h2>
+                    <input id="prodName" placeholder="Product Name">
+                    <input id="prodStock" placeholder="Stock Quantity" type="number">
+                    <button class="btn" onclick="addProduct()">Save Product</button>
+                    <hr>
+                    <h3>Current Products</h3>
+                    <table id="productTable"></table>
+                </div>
+
+                <!-- MULTI SELECT PRODUCT REQUEST -->
+                <div id="requestProductsSection" class="card" style="display:none;">
+                    <h2>Request Products</h2>
+                    <div id="multiProductContainer"></div>
+                    <button class="btn" onclick="submitMultipleRequest()">Submit Request</button>
+                </div>
+
+                <!-- REQUEST LIST -->
+                <div id="requestListSection" class="card" style="display:none;">
+                    <h2>All Requests</h2>
+                    <table id="requestTable"></table>
+                </div>
+
+                <!-- REPORTS -->
+                <div id="reportsSection" class="card" style="display:none;">
+                    <h2>Reports & Analytics</h2>
+                    <p>Charts and analytics will be added later.</p>
+                </div>
+
+                <!-- USERS PAGE -->
+                <div id="usersSection" class="card" style="display:none;">
+                    <h2>Users</h2>
+                    <p>User account management will appear here.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- =========================================================
+                        JAVASCRIPT LOGIC
+========================================================== -->
+<script>
+
+/* ---------------- DATA STORES (Front-End Only) ---------------- */
+
+let users = [
+    { email: "admin@example.com", password: "12345", role: "admin", name: "System Admin" },
+    { email: "warehouse@example.com", password: "12345", role: "warehouse", name: "Warehouse Manager" },
+    { email: "emp@example.com", password: "12345", role: "employee", name: "Employee 1" }
+];
+
+let currentUser = null;
+let products = [];
+let requests = [];
+
+/* ---------------- LOGIN ---------------- */
+
+function loginUser() {
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value.trim();
+
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+        alert("Invalid login");
+        return;
+    }
+
+    currentUser = user;
+
+    loginPage.style.display = "none";
+    dashboardPage.style.display = "block";
+
+    userDisplayName.innerText = user.name;
+    userRoleName.innerText = user.role;
+
+    applyRoleRestrictions();
+}
+
+/* ---------------- SIDEBAR COLLAPSE ---------------- */
+
+function toggleSidebar() {
+    let sb = document.getElementById("sidebar");
+    sb.classList.toggle("collapsed");
+}
+
+/* ---------------- PAGE SHOW/HIDE ---------------- */
+
+function hideAllPages() {
+    dashboardSection.style.display = "none";
+    addProductSection.style.display = "none";
+    requestProductsSection.style.display = "none";
+    requestListSection.style.display = "none";
+    reportsSection.style.display = "none";
+    usersSection.style.display = "none";
+}
+
+function showDashboard() {
+    hideAllPages();
+    dashboardSection.style.display = "block";
+}
+
+function showAddProductPage() {
+    hideAllPages();
+    addProductSection.style.display = "block";
+    renderProductTable();
+}
+
+function showRequestPage() {
+    hideAllPages();
+    requestProductsSection.style.display = "block";
+    renderMultiProductSelection();
+}
+
+function showRequestList() {
+    hideAllPages();
+    requestListSection.style.display = "block";
+    renderRequestTable();
+}
+
+function showReports() {
+    hideAllPages();
+    reportsSection.style.display = "block";
+}
+
+function showUsersPage() {
+    hideAllPages();
+    usersSection.style.display = "block";
+}
+
+/* ---------------- ROLE PERMISSIONS ---------------- */
+
+function applyRoleRestrictions() {
+    // Sidebar buttons
+    btnAddProducts.style.display = "block";
+    btnReports.style.display = "block";
+    btnUsers.style.display = "block";
+
+    addProductSection.style.display = "block";
+
+    if (currentUser.role === "employee") {
+        btnAddProducts.style.display = "none";
+        btnReports.style.display = "none";
+        btnUsers.style.display = "none";
+
+        addProductSection.style.display = "none";
+    }
+
+    if (currentUser.role === "warehouse") {
+        btnUsers.style.display = "none";
+    }
+}
+
+/* ---------------- ADD PRODUCTS ---------------- */
+
+function addProduct() {
+    let name = prodName.value.trim();
+    let stock = Number(prodStock.value);
+
+    if (!name || stock <= 0) {
+        alert("Invalid values");
+        return;
+    }
+
+    products.push({
+        id: Date.now(),
+        name,
+        stock
+    });
+
+    prodName.value = "";
+    prodStock.value = "";
+
+    renderProductTable();
+}
+
+function renderProductTable() {
+    let html = `
+        <tr>
+            <th>Name</th>
+            <th>Stock</th>
+        </tr>
+    `;
+
+    products.forEach(p => {
+        html += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.stock}</td>
+            </tr>
+        `;
+    });
+
+    productTable.innerHTML = html;
+}
+
+/* ---------------- MULTI PRODUCT REQUEST ---------------- */
+
+function renderMultiProductSelection() {
+    multiProductContainer.innerHTML = "";
+
+    products.forEach(prod => {
+        const row = document.createElement("div");
+        row.className = "multi-select-row";
+
+        row.innerHTML = `
+            <input type="checkbox" class="multiProdCheck" data-id="${prod.id}">
+            <span>${prod.name} (Stock: ${prod.stock})</span>
+            <input type="number" min="1" max="${prod.stock}" value="1" class="multiProdQty" data-id="${prod.id}" style="width:60px;">
+        `;
+
+        multiProductContainer.appendChild(row);
+    });
+}
+
+function submitMultipleRequest() {
+    const selected = document.querySelectorAll(".multiProdCheck:checked");
+
+    if (selected.length === 0) {
+        alert("Choose at least one product");
+        return;
+    }
+
+    const items = [];
+
+    selected.forEach(chk => {
+        const id = chk.dataset.id;
+        const qty = document.querySelector(`.multiProdQty[data-id="${id}"]`).value;
+        const product = products.find(p => p.id == id);
+
+        items.push({
+            id,
+            name: product.name,
+            qty: Number(qty)
+        });
+    });
+
+    requests.push({
+        id: "REQ-" + Date.now(),
+        user: currentUser.name,
+        role: currentUser.role,
+        items,
+        status: "pending",
+        timestamp: new Date().toLocaleString()
+    });
+
+    alert("Request submitted successfully!");
+    showRequestList();
+}
+
+/* ---------------- REQUEST TABLE ---------------- */
+
+function renderRequestTable() {
+    let html = `
+        <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    `;
+
+    requests.forEach(r => {
+        let itemText = r.items.map(i => `${i.name} x${i.qty}`).join("<br>");
+
+        html += `
+            <tr>
+                <td>${r.id}</td>
+                <td>${r.user}</td>
+                <td>${itemText}</td>
+                <td>${r.status}</td>
+                <td>
+                    ${currentUser.role !== "employee" ? `
+                        <button class="btn-success" onclick="approveReq('${r.id}')">Approve</button>
+                        <button class="btn-danger" onclick="rejectReq('${r.id}')">Reject</button>
+                    ` : "No Access"}
+                </td>
+            </tr>
+        `;
+    });
+
+    requestTable.innerHTML = html;
+}
+
+function approveReq(id) {
+    const req = requests.find(r => r.id === id);
+    req.status = "approved";
+    renderRequestTable();
+}
+
+function rejectReq(id) {
+    const req = requests.find(r => r.id === id);
+    req.status = "rejected";
+    renderRequestTable();
+}
+
+</script>
+</body>
 </html>
