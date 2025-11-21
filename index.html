@@ -632,38 +632,39 @@
         </div>
 
         <div id="addUserForm" class="card" style="display:none; margin-top:20px;">
-          <h2>Add New User</h2>
-          <form id="userForm">
-            <div class="form-row">
-              <div>
-                <label>Employee Code</label>
-                <input type="text" id="userCode" required>
+            <h2>Add New User</h2>
+            <form id="userForm">
+              <div class="form-row">
+                <div>
+                  <label>Employee Code</label>
+                  <input type="text" id="userCode" required>
+                </div>
+                <div>
+                  <label>Email</label>
+                  <input type="email" id="userEmail" required>
+                </div>
               </div>
-              <div>
-                <label>Email</label>
-                <input type="email" id="userEmail" required>
+              <div class="form-row">
+                <div>
+                  <label>Password</label>
+                  <input type="password" id="userPassword" required>
+                </div>
+                <div>
+                  <label>Role</label>
+                  <!-- CHANGE THIS ID from userRole to userRoleSelect -->
+                  <select id="userRoleSelect" required>
+                    <option value="employee">Employee</option>
+                    <option value="warehouse">Warehouse</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
               </div>
-            </div>
-            <div class="form-row">
-              <div>
-                <label>Password</label>
-                <input type="password" id="userPassword" required>
+              <div class="btn-group">
+                <button type="submit" class="btn btn-success">Create User</button>
+                <button type="button" class="btn btn-secondary" onclick="hideAddUser()">Cancel</button>
               </div>
-              <div>
-                <label>Role</label>
-                <select id="userRole" required>
-                  <option value="employee">Employee</option>
-                  <option value="warehouse">Warehouse</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-            </div>
-            <div class="btn-group">
-              <button type="submit" class="btn btn-success">Create User</button>
-              <button type="button" class="btn btn-secondary" onclick="hideAddUser()">Cancel</button>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
 
         <div class="card" style="margin-top:20px;">
           <h2>All Users</h2>
@@ -1061,30 +1062,30 @@
     }
 
     document.getElementById('userForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const userData = {
-        emp_code: document.getElementById('userCode').value,
-        email: document.getElementById('userEmail').value,
-        password: document.getElementById('userPassword').value,
-        role: document.getElementById('userRoleSelect').value
-      };
-      
-      console.log('Creating user with data:', userData);
-      
-      const { error } = await supabase
-        .from('users')
-        .insert([userData]);
-      
-      if (!error) {
-        hideAddUser();
-        await loadUsers();
-        alert('User created successfully!');
-      } else {
-        console.error('User creation error:', error);
-        alert('Error creating user: ' + error.message);
-      }
-    });
+  e.preventDefault();
+  
+  const userData = {
+    emp_code: document.getElementById('userCode').value,
+    email: document.getElementById('userEmail').value,
+    password: document.getElementById('userPassword').value,
+    role: document.getElementById('userRoleSelect').value  // Now using correct ID
+  };
+  
+  console.log('Creating user with data:', userData);
+  
+  const { error } = await supabase
+    .from('users')
+    .insert([userData]);
+  
+  if (!error) {
+    hideAddUser();
+    await loadUsers();
+    alert('User created successfully!');
+  } else {
+    console.error('User creation error:', error);
+    alert('Error creating user: ' + error.message);
+  }
+});
 
     function renderUsers() {
       const tbody = document.getElementById('usersTable');
